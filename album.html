@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Álbum por años · Sube tus fotos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background: #f5f7fb;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .album-container {
+      max-width: 1200px;
+      width: 100%;
+      background: white;
+      border-radius: 2rem;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+      padding: 2rem 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 span {
+      background: #eef2ff;
+      border-radius: 60px;
+      padding: 0.25rem 1rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #4f46e5;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #cbd5e1;
+      padding-left: 1rem;
+    }
+
+    /* zona de carga */
+    .upload-area {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 1.5rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      transition: all 0.2s ease;
+      margin-bottom: 2rem;
+      cursor: pointer;
+    }
+
+    .upload-area:hover {
+      border-color: #818cf8;
+      background: #f1f5ff;
+    }
+
+    .upload-area.dragover {
+      border-color: #4f46e5;
+      background: #eef2ff;
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-area p {
+      color: #334155;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .upload-area small {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* años y galerías */
+    .year-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .year-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+
+    .year-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    .photo-count {
+      background: #e2e8f0;
+      color: #334155;
+      border-radius: 40px;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .photo-card {
+      aspect-ratio: 1 / 1;
+      background: #f1f5f9;
+      border-radius: 1rem;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .photo-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 12px 18px -6px rgba(0, 0, 0, 0.15);
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-card .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      width: 26px;
+      height: 26px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      backdrop-filter: blur(4px);
+      line-height: 1;
+    }
+
+    .photo-card:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: #dc2626;
+    }
+
+    .empty-message {
+      color: #94a3b8;
+      font-style: italic;
+      padding: 1rem 0 0.5rem 0;
+      font-size: 0.95rem;
+      grid-column: 1 / -1;
+    }
+
+    .no-years {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #94a3b8;
+      background: #f8fafc;
+      border-radius: 1.5rem;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    .clear-all {
+      background: none;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .clear-all:hover {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="album-container">
+  <h1>
+    📸 Álbum por años
+    <span>organiza tus recuerdos</span>
+  </h1>
+  <div class="subtitle">
+    Sube fotos y se agruparán automáticamente por año (según la fecha del archivo)
+  </div>
+
+  <!-- Zona de carga -->
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">🖼️</div>
+    <p>Haz clic o arrastra tus fotos aquí</p>
+    <small>Formatos: JPG, PNG, WEBP, GIF · Se organizan por año</small>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+  </div>
+
+  <!-- Botón para borrar todo (opcional) -->
+  <div class="actions">
+    <button class="clear-all" id="clearAllBtn">🗑️ Borrar todas las fotos</button>
+  </div>
+
+  <!-- Aquí se renderizan los años y sus fotos -->
+  <div id="albumRoot">
+    <div class="no-years">
+      ✨ Aún no hay fotos. ¡Sube algunas para empezar!
+    </div>
+  </div>
+</div>
+<footer>Las imágenes se guardan solo en tu navegador (localStorage)</footer>
+
+<script>
+  (function() {
+    // --- Referencias DOM ---
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const albumRoot = document.getElementById('albumRoot');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    // --- Clave de almacenamiento ---
+    const STORAGE_KEY = 'photo_album_by_year';
+
+    // --- Estructura de datos:
+    // {
+    //   "2023": [ { id: "uuid", dataUrl: "data:image/..." }, ... ],
+    //   "2024": [ ... ]
+    // }
+    let albumData = {};
+
+    // --- Cargar desde localStorage ---
+    function loadFromStorage() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          albumData = JSON.parse(stored);
+          // Validación mínima: debe ser objeto
+          if (typeof albumData !== 'object' || albumData === null) albumData = {};
+        } else {
+          albumData = {};
+        }
+      } catch (e) {
+        console.warn('Error al cargar datos, se reinicia el álbum', e);
+        albumData = {};
+      }
+    }
+
+    // --- Guardar en localStorage ---
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(albumData));
+      } catch (e) {
+        // Si el almacenamiento está lleno, mostrar alerta
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+          alert('El almacenamiento está lleno. No se pueden guardar más fotos. Considera eliminar algunas.');
+        } else {
+          console.error('Error al guardar en localStorage', e);
+        }
+      }
+    }
+
+    // --- Generar un ID único para cada foto ---
+    function generateId() {
+      return Date.now() + '-' + Math.random().toString(36).substr(2, 12);
+    }
+
+    // --- Obtener el año de un archivo (según lastModified o fecha actual) ---
+    function getYearFromFile(file) {
+      // Usamos la fecha de modificación del archivo si existe
+      if (file.lastModified) {
+        const date = new Date(file.lastModified);
+        const year = date.getFullYear();
+        if (!isNaN(year)) return year.toString();
+      }
+      // Si no, usamos el año actual
+      return new Date().getFullYear().toString();
+    }
+
+    // --- Convertir archivo a DataURL ---
+    function fileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // --- Procesar archivos subidos ---
+    async function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      // Filtrar solo imágenes
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      if (imageFiles.length === 0) {
+        alert('Por favor, selecciona archivos de imagen válidos.');
+        return;
+      }
+
+      // Procesar cada imagen
+      for (const file of imageFiles) {
+        try {
+          const year = getYearFromFile(file);
+          const dataUrl = await fileToDataURL(file);
+
+          // Inicializar array del año si no existe
+          if (!albumData[year]) {
+            albumData[year] = [];
+          }
+
+          // Añadir nueva foto
+          albumData[year].push({
+            id: generateId(),
+            dataUrl: dataUrl,
+          });
+
+        } catch (error) {
+          console.error(`Error al procesar ${file.name}:`, error);
+          alert(`No se pudo subir la imagen "${file.name}". Intenta de nuevo.`);
+        }
+      }
+
+      // Guardar y renderizar
+      saveToStorage();
+      renderAlbum();
+    }
+
+    // --- Eliminar una foto por año e id ---
+    function deletePhoto(year, photoId) {
+      if (!albumData[year]) return;
+      albumData[year] = albumData[year].filter(photo => photo.id !== photoId);
+      // Si el año se queda sin fotos, eliminar la clave
+      if (albumData[year].length === 0) {
+        delete albumData[year];
+      }
+      saveToStorage();
+      renderAlbum();
+    }
+
+    // --- Eliminar todas las fotos ---
+    function clearAllPhotos() {
+      if (Object.keys(albumData).length === 0) {
+        alert('No hay fotos para borrar.');
+        return;
+      }
+      if (confirm('¿Estás seguro de que quieres eliminar TODAS las fotos del álbum? Esta acción no se puede deshacer.')) {
+        albumData = {};
+        saveToStorage();
+        renderAlbum();
+      }
+    }
+
+    // --- Renderizar la galería completa ---
+    function renderAlbum() {
+      const years = Object.keys(albumData).sort((a, b) => b.localeCompare(a)); // descendente: año más reciente primero
+
+      if (years.length === 0) {
+        albumRoot.innerHTML = `<div class="no-years">✨ Aún no hay fotos. ¡Sube algunas para empezar!</div>`;
+        return;
+      }
+
+      // Construir HTML
+      let html = '';
+      for (const year of years) {
+        const photos = albumData[year] || [];
+        if (photos.length === 0) continue; // por si acaso
+
+        html += `
+          <div class="year-section" data-year="${year}">
+            <div class="year-header">
+              <div class="year-title">📅 ${year}</div>
+              <div class="photo-count">${photos.length} foto${photos.length !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="gallery">
+        `;
+
+        // Ordenar fotos por id (que incluye timestamp, así que las más recientes primero)
+        const sortedPhotos = [...photos].sort((a, b) => {
+          const idA = a.id || '';
+          const idB = b.id || '';
+          return idB.localeCompare(idA);
+        });
+
+        for (const photo of sortedPhotos) {
+          html += `
+            <div class="photo-card" data-photo-id="${photo.id}" data-year="${year}">
+              <img src="${photo.dataUrl}" alt="Foto de ${year}" loading="lazy">
+              <button class="delete-btn" title="Eliminar foto" data-delete-year="${year}" data-delete-id="${photo.id}">✕</button>
+            </div>
+          `;
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      albumRoot.innerHTML = html;
+
+      // Asignar eventos a los botones de eliminar (delegación)
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const year = btn.dataset.deleteYear;
+          const photoId = btn.dataset.deleteId;
+          if (year && photoId) {
+            deletePhoto(year, photoId);
+          }
+        });
+      });
+    }
+
+    // --- Configurar eventos de subida ---
+    function setupUploadEvents() {
+      // Clic en el área de carga
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      // Cambio en el input file
+      fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length > 0) {
+          handleFiles(fileInput.files);
+          fileInput.value = ''; // limpiar para permitir subir el mismo archivo de nuevo
+        }
+      });
+
+      // Drag & drop
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFiles(files);
+        }
+      });
+
+      // Evitar que el navegador abra la imagen al soltarla fuera de la zona
+      window.addEventListener('dragover', (e) => e.preventDefault());
+      window.addEventListener('drop', (e) => e.preventDefault());
+
+      // Botón borrar todo
+      clearAllBtn.addEventListener('click', clearAllPhotos);
+    }
+
+    // --- Inicialización ---
+    function init() {
+      loadFromStorage();
+      renderAlbum();
+      setupUploadEvents();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
