@@ -1,11 +1,363 @@
 <!DOCTYPE html>
-
 <html lang="en">
-  <head>
-   <title>Album</title>
-  </head>
-  <body>
-    <p>Leo</p>
-    <img src="media/2012-04-06 17.38.49.jpg">
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Album · responsive thumbnails</title>
+  <style>
+    /* ----- CSS variables for theming ----- */
+    :root {
+      --bg-body: #f5f7fa;
+      --bg-header: #ffffff;
+      --bg-btn: #f1f5f9;
+      --bg-btn-hover: #e2e8f0;
+      --bg-card: #ffffff;
+      --bg-card-border: rgba(0, 0, 0, 0.02);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --bg-muted-pill: #eef2f6;
+      --shadow-header: 0 8px 20px rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04);
+      --shadow-card-hover: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ----- night theme overrides ----- */
+    body.night {
+      --bg-body: #0b0f17;
+      --bg-header: #151c28;
+      --bg-btn: #1e293b;
+      --bg-btn-hover: #2a3648;
+      --bg-card: #151c28;
+      --bg-card-border: rgba(255, 255, 255, 0.04);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --bg-muted-pill: #1e293b;
+      --shadow-header: 0 8px 20px rgba(0, 0, 0, 0.4);
+      --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-card-hover: 0 12px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ----- base / reset ----- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      background-color: var(--bg-body);
+      transition: background-color 0.25s ease;
+    }
+    body {
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ----- header / controls ----- */
+    .header {
+      background: var(--bg-header);
+      width: 100%;
+      max-width: 1200px;
+      padding: 1.2rem 1.5rem;
+      border-radius: 2rem;
+      box-shadow: var(--shadow-header);
+      margin-bottom: 2rem;
+      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-right: auto;
+      transition: color 0.25s ease;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-weight: 400;
+      background: var(--bg-muted-pill);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      margin-right: auto;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* ----- night toggle button ----- */
+    .night-btn {
+      background: var(--bg-btn);
+      border: 1px solid transparent;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .night-btn:hover {
+      background: var(--bg-btn-hover);
+      transform: scale(1.03);
+    }
+
+    /* ----- photo grid (thumbnails) — fixed at 4 columns ----- */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* each thumbnail card */
+    .thumb-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 1.2rem;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease,
+                  background-color 0.25s ease, border-color 0.25s ease;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb-card:hover {
+      transform: scale(1.02);
+      box-shadow: var(--shadow-card-hover);
+    }
+    .thumb-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.2s;
+    }
+
+    /* ----- lightbox overlay ----- */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 25, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      z-index: 1000;
+      padding: 1.5rem;
+    }
+    .lightbox.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .lightbox-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0b0f17;
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      transform: scale(0.96);
+      transition: transform 0.2s ease;
+    }
+    .lightbox.show .lightbox-content {
+      transform: scale(1);
+    }
+    .lightbox-content img {
+      max-width: 90vw;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      border-radius: 1rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      background: #1e1e2a;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 1.5rem;
+      right: 2rem;
+      font-size: 2.5rem;
+      line-height: 1;
+      color: white;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.08);
+      width: 3rem;
+      height: 3rem;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 1005;
+      font-weight: 300;
+    }
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.1);
+    }
+
+    /* ----- responsive breakpoints (grid columns) ----- */
+    @media (max-width: 900px) {
+      .gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .header {
+        flex-direction: column;
+        align-items: center;
+      }
+      .header h1, .header p {
+        margin-right: 0;
+      }
+    }
+    @media (max-width: 400px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header (title + night toggle) -->
+  <div class="header" id="myHeader">
+    <h1>Album</h1>
+    <p>2012</p>
+    <button class="night-btn" id="nightToggle" title="Toggle night mode">🌙 Night</button>
+  </div>
+
+  <!-- Responsive photo grid (thumbnails, fixed 4 columns) -->
+  <div class="gallery-grid" id="galleryGrid">
+    <div class="thumb-card">
+      <img src="media/2012-09-08 12.56.41.jpg" alt="Album photo 1" loading="lazy">
+    </div>
+    <div class="thumb-card">
+      <img src="media/2012-04-06 17.38.49.jpg" alt="Album photo 2" loading="lazy">
+    </div>
+    <div class="thumb-card">
+      <img src="media/2012-04-06 17.37.46.jpg" alt="Album photo 3" loading="lazy">
+    </div>
+    <div class="thumb-card">
+      <img src="media/2012-04-06 17.38.28.jpg" alt="Album photo 4" loading="lazy">
+    </div>
+  </div>
+
+  <!-- Lightbox overlay (hidden by default) -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-close" id="lightboxClose">&times;</div>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="Enlarged photo">
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- DOM elements -----
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImage = document.getElementById('lightboxImage');
+      const lightboxClose = document.getElementById('lightboxClose');
+      const nightToggle = document.getElementById('nightToggle');
+
+      // ----- Night mode -----
+      const NIGHT_KEY = 'album-night-mode';
+
+      function setNightMode(on) {
+        document.body.classList.toggle('night', on);
+        nightToggle.textContent = on ? '☀️ Day' : '🌙 Night';
+        nightToggle.setAttribute('title', on ? 'Switch to day mode' : 'Switch to night mode');
+        try {
+          localStorage.setItem(NIGHT_KEY, on ? '1' : '0');
+        } catch (e) { /* localStorage may be unavailable */ }
+      }
+
+      // Load saved preference
+      let saved = null;
+      try {
+        saved = localStorage.getItem(NIGHT_KEY);
+      } catch (e) { /* ignore */ }
+
+      if (saved === '1') {
+        setNightMode(true);
+      } else if (saved === '0') {
+        setNightMode(false);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // respect OS preference on first visit
+        setNightMode(true);
+      }
+
+      nightToggle.addEventListener('click', function() {
+        const isNight = document.body.classList.contains('night');
+        setNightMode(!isNight);
+      });
+
+      // ----- Lightbox functionality -----
+      const thumbCards = document.querySelectorAll('.thumb-card');
+      thumbCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const img = this.querySelector('img');
+          if (!img) return;
+          const src = img.getAttribute('src');
+          lightboxImage.setAttribute('src', src);
+          lightboxImage.setAttribute('alt', img.getAttribute('alt') || 'Enlarged photo');
+          lightbox.classList.add('show');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+
+      lightboxClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        closeLightbox();
+      });
+
+      lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lightbox.classList.contains('show')) {
+          closeLightbox();
+        }
+      });
+
+      function closeLightbox() {
+        lightbox.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    })();
+  </script>
+</body>
 </html>
