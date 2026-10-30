@@ -152,6 +152,14 @@
       transition: opacity 0.2s;
     }
 
+    .footer {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: center;   /* or flex-end to align right */
+      padding: 2rem 0 1rem;
+    }
+
     /* ----- lightbox overlay ----- */
     .lightbox {
       position: fixed;
@@ -273,7 +281,11 @@
       <img src="media/2012-04-06 17.38.28.jpg" alt="Album photo 4" loading="lazy">
     </div>
   </div>
-
+  
+  <footer class="footer">
+    <button class="night-btn" id="nightToggle" title="Toggle night mode">🌙 Night</button>
+  </footer>
+  
   <!-- Lightbox overlay (hidden by default) -->
   <div class="lightbox" id="lightbox">
     <div class="lightbox-close" id="lightboxClose">&times;</div>
