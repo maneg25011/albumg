@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Album · responsive thumbnails</title>
   <style>
-    /* ----- CSS variables for theming ----- */
     :root {
       --bg-body: #f5f7fa;
       --bg-header: #ffffff;
@@ -24,7 +23,6 @@
       --nav-hover: #e2e8f0;
     }
 
-    /* ----- night theme overrides ----- */
     body.night {
       --bg-body: #0b0f17;
       --bg-header: #151c28;
@@ -43,7 +41,6 @@
       --nav-hover: #334155;
     }
 
-    /* ----- base / reset ----- */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -66,19 +63,18 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* ----- layout: sidebar + main content ----- */
     .app-layout {
-      display: flex;
+      display: grid;
+      grid-template-columns: 180px 1fr;
       width: 100%;
       max-width: 1400px;
       gap: 2rem;
-      align-items: flex-start;
+      align-items: start;
     }
 
-    /* ----- left sidebar with year navigation ----- */
     .sidebar {
-      flex: 0 0 180px;
-      align-self:auto;
+      grid-column: 1;
+      grid-row: 1;
       position: sticky;
       top: 2rem;
       background: var(--bg-header);
@@ -121,16 +117,15 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    /* ----- main content column ----- */
     .main-content {
-      flex: 1;
+      grid-column: 2;
+      grid-row: 1;
       min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* ----- header ----- */
     .header {
       background: var(--bg-header);
       width: 100%;
@@ -162,7 +157,6 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* ----- year section ----- */
     .year-section {
       text-align: center;
       width: 100%;
@@ -179,7 +173,6 @@
       transition: border-color 0.25s ease, color 0.25s ease;
     }
 
-    /* ----- photo grid (thumbnails) — fixed at 4 columns ----- */
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -187,7 +180,6 @@
       width: 100%;
     }
 
-    /* each thumbnail card */
     .thumb-card {
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
@@ -214,14 +206,6 @@
       transition: opacity 0.2s;
     }
 
-    .footer {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      padding: 1rem 0 2rem;
-    }
-
-    /* ----- night toggle button ----- */
     .night-btn {
       background: var(--bg-btn);
       border: 1px solid transparent;
@@ -234,14 +218,16 @@
       line-height: 1;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.4rem;
+      width: 100%;
+      margin-top: 0.4rem;
     }
     .night-btn:hover {
       background: var(--bg-btn-hover);
       transform: scale(1.03);
     }
 
-    /* ----- lightbox overlay ----- */
     .lightbox {
       position: fixed;
       inset: 0;
@@ -289,7 +275,6 @@
       background: #1e1e2a;
     }
 
-    /* ----- lightbox navigation buttons ----- */
     .lightbox-prev,
     .lightbox-next {
       position: fixed;
@@ -352,7 +337,6 @@
       transform: scale(1.1);
     }
 
-    /* ----- back to top button ----- */
     .back-to-top {
       position: fixed;
       bottom: 1.5rem;
@@ -390,36 +374,57 @@
       transform: translateY(0) scale(0.95);
     }
 
-    /* ----- responsive breakpoints (grid columns & sidebar) ----- */
+    /* ===== MÓVIL: header → menú de años → galerías ===== */
     @media (max-width: 900px) {
       .app-layout {
+        display: flex;
         flex-direction: column;
+        gap: 1rem;
       }
+
+      /* El main-content deja de ser un contenedor y sus hijos
+         pasan a ser hijos directos del flex (.app-layout) */
+      .main-content {
+        display: contents;
+        order: 0;
+      }
+
+      .header {
+        order: 1;
+        margin-bottom: 0;
+      }
+
       .sidebar {
+        order: 2;
         position: static;
-        flex: auto;
         width: 100%;
         padding: 0.8rem 1rem;
         border-radius: 2rem;
-        /* En móvil, el menú de años aparece DEBAJO de "Album" */
-        order: 2;
       }
+
       .sidebar .year-nav {
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
         gap: 0.4rem;
       }
+
       .sidebar .year-nav a {
         padding: 0.45rem 1rem;
         font-size: 0.95rem;
       }
-      /* El contenido principal va primero (Album arriba) */
-      .main-content {
-        order: 1;
+
+      .year-section {
+        order: 3;
+        width: 100%;
       }
+
       .gallery-grid {
         grid-template-columns: repeat(3, 1fr);
+      }
+      .night-btn {
+        width: auto;
+        margin-top: 0;
       }
       .lightbox-prev,
       .lightbox-next {
@@ -434,6 +439,7 @@
         right: 0.8rem;
       }
     }
+
     @media (max-width: 640px) {
       .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -444,7 +450,23 @@
       .year-section h2 {
         font-size: 1.4rem;
       }
+
+      /* Menú de años como fila compacta con scroll horizontal */
+      .sidebar .year-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .sidebar .year-nav::-webkit-scrollbar {
+        display: none;
+      }
+      .sidebar .year-nav a {
+        flex: 0 0 auto;
+      }
     }
+
     @media (max-width: 400px) {
       .gallery-grid {
         grid-template-columns: 1fr;
@@ -455,24 +477,11 @@
 <body>
 
   <div class="app-layout">
-    <!-- Left sidebar with year navigation (scrolls to sections) -->
-    <aside class="sidebar">
-      <nav class="year-nav" aria-label="Album years">
-        <a href="#year-2012" class="active">2012</a>
-        <a href="#year-2013">2013</a>
-        <a href="#year-2014">2014</a>
-        <a href="#year-2015">2015</a>
-        <a href="#year-2016">2016</a>
-      </nav>
-    </aside>
-
-    <!-- Main content: header + grouped gallery -->
     <main class="main-content">
       <div class="header" id="myHeader">
         <h1>Album</h1>
       </div>
 
-      <!-- 2012 section -->
       <section class="year-section" id="year-2012">
         <h2>2012</h2>
         <div class="gallery-grid">
@@ -494,7 +503,6 @@
         </div>
       </section>
 
-      <!-- 2013 section -->
       <section class="year-section" id="year-2013">
         <h2>2013</h2>
         <div class="gallery-grid">
@@ -510,19 +518,15 @@
         </div>
       </section>
 
-      <!-- 2014 section (empty for now) -->
       <section class="year-section" id="year-2014">
         <h2>2014</h2>
         <div class="gallery-grid">
-          <!-- No photos yet -->
         </div>
       </section>
 
-      <!-- 2015 section (empty for now) -->
       <section class="year-section" id="year-2015">
         <h2>2015</h2>
         <div class="gallery-grid">
-          <!-- No photos yet -->
         </div>
       </section>
 
@@ -540,17 +544,22 @@
             <img src="media/2016-01-23 11.40.33.jpg" alt="2012 photo 5" loading="lazy">
         </div>
       </section>
-
-      <div class="footer">
-        <button class="night-btn" id="nightToggle" title="Toggle night mode">🌙 Night</button>
-      </div>
-
+      
     </main>
+
+    <aside class="sidebar">
+      <nav class="year-nav" aria-label="Album years">
+        <a href="#year-2012" class="active">2012</a>
+        <a href="#year-2013">2013</a>
+        <a href="#year-2014">2014</a>
+        <a href="#year-2015">2015</a>
+        <a href="#year-2016">2016</a>
+      </nav>
+      <button class="night-btn" id="nightToggle" title="Toggle night mode">🌙 Night</button>
+    </aside>
   </div>
 
-  <!-- Lightbox overlay (hidden by default) -->
   <div class="lightbox" id="lightbox">
-    <!-- Navigation buttons -->
     <div class="lightbox-prev" id="lightboxPrev" aria-label="Previous image">‹</div>
     <div class="lightbox-next" id="lightboxNext" aria-label="Next image">›</div>
     <div class="lightbox-close" id="lightboxClose">&times;</div>
@@ -559,12 +568,10 @@
     </div>
   </div>
 
-  <!-- Back to top button -->
   <button class="back-to-top" id="backToTop" title="Volver al inicio" aria-label="Volver al inicio">↑</button>
 
   <script>
     (function() {
-      // ----- DOM elements -----
       const lightbox = document.getElementById('lightbox');
       const lightboxImage = document.getElementById('lightboxImage');
       const lightboxClose = document.getElementById('lightboxClose');
@@ -573,7 +580,6 @@
       const nightToggle = document.getElementById('nightToggle');
       const backToTop = document.getElementById('backToTop');
 
-      // ----- Night mode -----
       const NIGHT_KEY = 'album-night-mode';
 
       function setNightMode(on) {
@@ -582,14 +588,13 @@
         nightToggle.setAttribute('title', on ? 'Switch to day mode' : 'Switch to night mode');
         try {
           localStorage.setItem(NIGHT_KEY, on ? '1' : '0');
-        } catch (e) { /* localStorage may be unavailable */ }
+        } catch (e) {}
       }
 
-      // Load saved preference
       let saved = null;
       try {
         saved = localStorage.getItem(NIGHT_KEY);
-      } catch (e) { /* ignore */ }
+      } catch (e) {}
 
       if (saved === '1') {
         setNightMode(true);
@@ -604,7 +609,6 @@
         setNightMode(!isNight);
       });
 
-      // ----- Lightbox functionality with navigation -----
       const thumbCards = Array.from(document.querySelectorAll('.thumb-card'));
       const galleryItems = thumbCards.map(card => {
         const img = card.querySelector('img');
@@ -680,7 +684,6 @@
         }
       });
 
-      // ----- Year navigation: highlight active section on scroll -----
       const yearLinks = document.querySelectorAll('.sidebar .year-nav a');
       const sections = document.querySelectorAll('.year-section');
 
@@ -708,7 +711,6 @@
       window.addEventListener('scroll', updateActiveLink);
       window.addEventListener('load', updateActiveLink);
 
-      // ----- Back to top button visibility -----
       function updateBackToTop() {
         if (window.scrollY > 300) {
           backToTop.classList.add('visible');
@@ -727,3 +729,5 @@
   </script>
 </body>
 </html>
+
+
